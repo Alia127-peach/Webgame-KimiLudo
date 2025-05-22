@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>KimiLudo - Ludo Edukasi Kimia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --blue: #3498db;
+            --red: #e74c3c;
+            --green: #2ecc71;
+            --yellow: #f1c40f;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header, footer {
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        main {
+            flex: 1;
+            padding: 1rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Game Setup */
+        #game-setup {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        #game-setup label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        select, button {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        button {
+            background-color: var(--blue);
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        /* Game Board */
+        #game-board-section {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+        }
+        
+        #game-board {
+            aspect-ratio: 1/1;
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            grid-template-rows: repeat(11, 1fr);
+            gap: 2px;
+            background: var(--dark);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .cell {
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 5;
+        }
+        
+        .home-blue { background-color: var(--blue); color: white; }
+        .home-red { background-color: var(--red); color: white; }
+        .home-green { background-color: var(--green); color: white; }
+        .home-yellow { background-color: var(--yellow); color: black; }
+        
+        .path-blue { background-color: rgba(52, 152, 219, 0.3); }
+        .path-red { background-color: rgba(231, 76, 60, 0.3); }
+        .path-green { background-color: rgba(46, 204, 113, 0.3); }
+        .path-yellow { background-color: rgba(241, 196, 15, 0.3); }
+        
+        .center {
+            background: linear-gradient(135deg, 
+                var(--blue) 0%, var(--blue) 25%, 
+                var(--red) 25%, var(--red) 50%, 
+                var(--green) 50%, var(--green) 75%, 
+                var(--yellow) 75%, var(--yellow) 100%);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .element {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .atomic-num {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.6rem;
+        }
+        
+        .symbol {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        /* Pawn Styles */
+        .pawn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .pawn-blue { background-color: var(--blue); }
+        .pawn-red { background-color: var(--red); }
+        .pawn-green { background-color: var(--green); }
+        .pawn-yellow { background-color: var(--yellow); }
+        
+        .pawn-1 { top: 10%; left: 10%; }
+        .pawn-2 { top: 10%; right: 10%; }
+        .pawn-3 { bottom: 10%; left: 10%; }
+        .pawn-4 { bottom: 10%; right: 10%; }
+        
+        /* Controls */
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        #dice-result {
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--dark);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 1rem auto;
+        }
+        
+        #current-player {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        /* Info Panel */
+        #info-panel {
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        #info-panel h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        #leaderboard {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        #badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--yellow);
+            color: var(--dark);
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .option {
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .option:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .option.selected {
+            background-color: var(--blue);
+            color: white;
+        }
+        
+        .option.correct {
+            background-color: var(--green);
+            color: white;
+        }
+        
+        .option.wrong {
+            background-color: var(--red);
+            color: white;
+        }
+        
+        .explanation {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-left: 4px solid var(--green);
+        }
+        
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            #game-board-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .cell {
+                font-size: 0.7rem;
+            }
+            
+            .symbol {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="correct-sound" src="assets/sfx-correct.mp3"></audio>
+    <audio id="wrong-sound" src="assets/sfx-wrong.mp3"></audio>
+    
+    <header>
+        <h1>KimiLudo</h1>
+        <p>Belajar Kimia sambil bermain!</p>
+    </header>
+    
+    <main>
+        <section id="game-setup">
+            <label>Pilih Jumlah Pemain:
+                <select id="player-count">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+            </label>
+            <label>Pilih Level Kesulitan:
+                <select id="difficulty">
+                    <option value="easy">SMP</option>
+                    <option value="hard">SMA</option>
+                </select>
+            </label>
+            <button id="start-btn">Mulai Permainan</button>
+        </section>
+        
+        <section id="game-board-section" class="hidden">
+            <div id="game-board"></div>
+            <div id="controls">
+                <button id="roll-dice-btn">Lempar Dadu</button>
+                <div id="dice-result">1</div>
+                <div id="current-player">Giliran: Pemain 1</div>
+            </div>
+            <div id="info-panel">
+                <h2>Leaderboard</h2>
+                <ol id="leaderboard"></ol>
+                <h2>Badge</h2>
+                <div id="badges"></div>
+            </div>
+        </section>
+        
+        <div id="question-modal" class="modal hidden">
+            <div class="modal-content">
+                <span id="close-modal" class="close">&times;</span>
+                <div id="question-area"></div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 KimiLudo | Edukasi Kimia Interaktif</p>
+    </footer>
+    
+    <script>
+        // Data Unsur Kimia (Disederhanakan)
+        const elements = [
+            { symbol: "H", name: "Hidrogen", number: 1 },
+            { symbol: "He", name: "Helium", number: 2 },
+            { symbol: "Li", name: "Litium", number: 3 },
+            { symbol: "Be", name: "Berilium", number: 4 },
+            { symbol: "B", name: "Boron", number: 5 },
+            { symbol: "C", name: "Karbon", number: 6 },
+            { symbol: "N", name: "Nitrogen", number: 7 },
+            { symbol: "O", name: "Oksigen", number: 8 },
+            { symbol: "F", name: "Fluorin", number: 9 },
+            { symbol: "Ne", name: "Neon", number: 10 },
+            { symbol: "Na", name: "Natrium", number: 11 },
+            { symbol: "Mg", name: "Magnesium", number: 12 },
+            { symbol: "Al", name: "Aluminium", number: 13 },
+            { symbol: "Si", name: "Silikon", number: 14 },
+            { symbol: "P", name: "Fosfor", number: 15 },
+            { symbol: "S", name: "Sulfur", number: 16 },
+            { symbol: "Cl", name: "Klorin", number: 17 },
+            { symbol: "Ar", name: "Argon", number: 18 },
+            { symbol: "K", name: "Kalium", number: 19 },
+            { symbol: "Ca", name: "Kalsium", number: 20 },
+            { symbol: "Fe", name: "Besi", number: 26 },
+            { symbol: "Cu", name: "Tembaga", number: 29 },
+            { symbol: "Zn", name: "Seng", number: 30 },
+            { symbol: "I", name: "Iodin", number: 53 },
+            { symbol: "Au", name: "Emas", number: 79 }
+        ];
+
+        // Bank Soal
+        const questions = {
+            easy: [
+                {
+                    element: "Hidrogen",
+                    question: "Berapa nomor atom Hidrogen?",
+                    options: ["1", "2", "3", "4"],
+                    answer: "1",
+                    explanation: "Hidrogen memiliki 1 proton dalam intinya, sehingga nomor atomnya adalah 1."
+                },
+                {
+                    element: "Oksigen",
+                    question: "Apa simbol untuk unsur Oksigen?",
+                    options: ["O", "Ox", "Os", "Og"],
+                    answer: "O",
+                    explanation: "Simbol untuk Oksigen adalah O."
+                },
+                {
+                    element: "Natrium",
+                    question: "Natrium termasuk dalam golongan apa?",
+                    options: ["Alkali", "Alkali Tanah", "Halogen", "Gas Mulia"],
+                    answer: "Alkali",
+                    explanation: "Natrium (Na) adalah unsur golongan 1 atau golongan Alkali."
+                }
+            ],
+            hard: [
+                {
+                    element: "Klorin",
+                    question: "Berapa elektron valensi dari unsur Klorin?",
+                    options: ["5", "6", "7", "8"],
+                    answer: "7",
+                    explanation: "Klorin memiliki 7 elektron valensi karena berada di golongan 17 (7A)."
+                },
+                {
+                    element: "Magnesium",
+                    question: "Apa konfigurasi elektron dari unsur Magnesium?",
+                    options: ["1s² 2s² 2p⁶ 3s¹", "1s² 2s² 2p⁶", "1s² 2s² 2p⁶ 3s²", "1s² 2s² 2p⁶ 3s² 3p¹"],
+                    answer: "1s² 2s² 2p⁶ 3s²",
+                    explanation: "Magnesium (Z=12) memiliki konfigurasi elektron 1s² 2s² 2p⁶ 3s²."
+                },
+                {
+                    element: "Besi",
+                    question: "Berapa jumlah elektron maksimum pada orbital 3d?",
+                    options: ["2", "6", "10", "14"],
+                    answer: "10",
+                    explanation: "Orbital 3d dapat menampung maksimal 10 elektron (5 orbital dengan masing-masing 2 elektron)."
+                }
+            ]
+        };
+
+        // Game State
+        const gameState = {
+            players: [],
+            currentPlayer: 0,
+            diceValue: 1,
+            board: []
+        };
+
+        // DOM Elements
+        const setupSection = document.getElementById('game-setup');
+        const boardSection = document.getElementById('game-board-section');
+        const startBtn = document.getElementById('start-btn');
+        const playerCountSelect = document.getElementById('player-count');
+        const difficultySelect = document.getElementById('difficulty');
+        const gameBoard = document.getElementById('game-board');
+        const rollDiceBtn = document.getElementById('roll-dice-btn');
+        const diceResult = document.getElementById('dice-result');
+        const currentPlayerDisplay = document.getElementById('current-player');
+        const leaderboard = document.getElementById('leaderboard');
+        const questionModal = document.getElementById('question-modal');
+        const closeModal = document.getElementById('close-modal');
+        const questionArea = document.getElementById('question-area');
+        const correctSound = document.getElementById('correct-sound');
+        const wrongSound = document.getElementById('wrong-sound');
+
+        // Event Listeners
+        startBtn.addEventListener('click', startGame);
+        rollDiceBtn.addEventListener('click', rollDice);
+        closeModal.addEventListener('click', () => questionModal.classList.add('hidden'));
+
+        // Initialize Board Layout
+        function initializeBoard() {
+            // Define board layout
+            const boardLayout = Array(11).fill().map(() => Array(11).fill(null));
+            
+            // Set home areas
+            boardLayout[0][0] = { type: 'home', color: 'blue' };
+            boardLayout[0][10] = { type: 'home', color: 'red' };
+            boardLayout[10][0] = { type: 'home', color: 'green' };
+            boardLayout[10][10] = { type: 'home', color: 'yellow' };
+            
+            // Set center
+            boardLayout[5][5] = { type: 'center' };
+            
+            // Set paths with elements
+            let elementIndex = 0;
+            
+            // Main path (clockwise)
+            const mainPath = [
+                {x: 5, y: 0}, {x: 5, y: 1}, {x: 5, y: 2}, {x: 5, y: 3}, {x: 5, y: 4},
+                {x: 4, y: 5}, {x: 3, y: 5}, {x: 2, y: 5}, {x: 1, y: 5}, {x: 0, y: 5},
+                {x: 0, y: 6}, {x: 1, y: 6}, {x: 2, y: 6}, {x: 3, y: 6}, {x: 4, y: 6},
+                {x: 5, y: 6}, {x: 5, y: 7}, {x: 5, y: 8}, {x: 5, y: 9}, {x: 5, y: 10},
+                {x: 6, y: 10}, {x: 6, y: 9}, {x: 6, y: 8}, {x: 6, y: 7}, {x: 6, y: 6},
+                {x: 7, y: 6}, {x: 8, y: 6}, {x: 9, y: 6}, {x: 10, y: 6}, {x: 10, y: 5},
+                {x: 9, y: 5}, {x: 8, y: 5}, {x: 7, y: 5}, {x: 6, y: 5}, {x: 6, y: 4},
+                {x: 6, y: 3}, {x: 6, y: 2}, {x: 6, y: 1}, {x: 6, y: 0}, {x: 5, y: 0}
+            ];
+            
+            mainPath.forEach(pos => {
+                const element = elements[elementIndex % elements.length];
+                boardLayout[pos.y][pos.x] = { 
+                    type: 'path',
+                    element: element
+                };
+                elementIndex++;
+            });
+            
+            // Home paths
+            const homePaths = {
+                blue: [{x: 1, y: 5}, {x: 2, y: 5}, {x: 3, y: 5}, {x: 4, y: 5}, {x: 5, y: 5}],
+                red: [{x: 5, y: 9}, {x: 5, y: 8}, {x: 5, y: 7}, {x: 5, y: 6}, {x: 5, y: 5}],
+                green: [{x: 9, y: 5}, {x: 8, y: 5}, {x: 7, y: 5}, {x: 6, y: 5}, {x: 5, y: 5}],
+                yellow: [{x: 5, y: 1}, {x: 5, y: 2}, {x: 5, y: 3}, {x: 5, y: 4}, {x: 5, y: 5}]
+            };
+            
+            Object.keys(homePaths).forEach(color => {
+                homePaths[color].forEach((pos, i) => {
+                    if (i < 4 && boardLayout[pos.y][pos.x].type === 'path') {
+                        boardLayout[pos.y][pos.x].homeColor = color;
+                    }
+                });
+            });
+            
+            return boardLayout;
+        }
+
+        // Create Board UI
+        function createBoardUI(boardLayout) {
+            gameBoard.innerHTML = '';
+            
+            for (let y = 0; y < boardLayout.length; y++) {
+                for (let x = 0; x < boardLayout[y].length; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    const cellData = boardLayout[y][x];
+                    
+                    if (cellData) {
+                        if (cellData.type === 'home') {
+                            cell.classList.add(`home-${cellData.color}`);
+                            cell.innerHTML = `<span>HOME</span>`;
+                        } 
+                        else if (cellData.type === 'center') {
+                            cell.classList.add('center');
+                            cell.innerHTML = 'FINISH';
+                        } 
+                        else if (cellData.type === 'path') {
+                            if (cellData.homeColor) {
+                                cell.classList.add(`path-${cellData.homeColor}`);
+                            }
+                            
+                            if (cellData.element) {
+                                cell.classList.add('element');
+                                cell.innerHTML = `
+                                    <span class="atomic-num">${cellData.element.number}</span>
+                                    <span class="symbol">${cellData.element.symbol}</span>
+                                `;
+                                cell.dataset.element = cellData.element.name;
+                            }
+                        }
+                    }
+                    
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        // Start Game
+        function startGame() {
+            const numPlayers = parseInt(playerCountSelect.value);
+            const difficulty = difficultySelect.value;
+            
+            // Setup players
+            gameState.players = [];
+            const colors = ['blue', 'red', 'green', 'yellow'];
+            
+            for (let i = 0; i < numPlayers; i++) {
+                gameState.players.push({
+                    id: i,
+                    name: `Pemain ${i+1}`,
+                    color: colors[i],
+                    score: 0,
+                    badges: [],
+                    pawns: [
+                        { id: i*4+1, position: -1, isHome: true },
+                        { id: i*4+2, position: -1, isHome: true },
+                        { id: i*4+3, position: -1, isHome: true },
+                        { id: i*4+4, position: -1, isHome: true }
+                    ]
+                });
+            }
+            
+            // Initialize board
+            gameState.board = initializeBoard();
+            createBoardUI(gameState.board);
+            
+            // Update UI
+            setupSection.classList.add('hidden');
+            boardSection.classList.remove('hidden');
+            updateLeaderboard();
+            updateCurrentPlayer();
+        }
+
+        // Roll Dice
+        function rollDice() {
+            rollDiceBtn.disabled = true;
+            diceResult.textContent = '?';
+            
+            // Animate dice roll
+            let rolls = 0;
+            const maxRolls = 10;
+            const rollInterval = setInterval(() => {
+                diceResult.textContent = Math.floor(Math.random() * 6) + 1;
+                rolls++;
+                
+                if (rolls >= maxRolls) {
+                    clearInterval(rollInterval);
+                    const result = Math.floor(Math.random() * 6) + 1;
+                    gameState.diceValue = result;
+                    diceResult.textContent = result;
+                    
+                    // Show question modal
+                    setTimeout(showQuestion, 500);
+                }
+            }, 100);
+        }
+
+        // Show Question
+        function showQuestion() {
+            const difficulty = difficultySelect.value;
+            const questionSet = questions[difficulty];
+            const randomIndex = Math.floor(Math.random() * questionSet.length);
+            const question = questionSet[randomIndex];
+            
+            questionArea.innerHTML = `
+                <h3>Pertanyaan tentang ${question.element}</h3>
+                <p>${question.question}</p>
+                <div class="options">
+                    ${question.options.map((option, index) => 
+                        `<div class="option" data-index="${index}">${option}</div>`
+                    ).join('')}
+                </div>
+                <div class="explanation hidden">
+                    <h4>Penjelasan:</h4>
+                    <p>${question.explanation}</p>
+                </div>
+                <button id="answer-btn" class="hidden">Lanjutkan</button>
+            `;
+            
+            // Add event listeners to options
+            const options = questionArea.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove selection from all options
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selection to clicked option
+                    option.classList.add('selected');
+                    
+                    // Enable answer button
+                    const answerBtn = document.getElementById('answer-btn');
+                    answerBtn.classList.remove('hidden');
+                });
+            });
+            
+            // Add event listener for answer button
+            const answerBtn = document.getElementById('answer-btn');
+            answerBtn.addEventListener('click', () => {
+                const selectedOption = questionArea.querySelector('.option.selected');
+                
+                if (selectedOption) {
+                    const selectedAnswer = selectedOption.textContent;
+                    const correctAnswer = question.answer;
+                    
+                    // Show correct/wrong styling
+                    options.forEach(option => {
+                        if (option.textContent === correctAnswer) {
+                            option.classList.add('correct');
+                        } else if (option === selectedOption && option.textContent !== correctAnswer) {
+                            option.classList.add('wrong');
+                        }
+                    });
+                    
+                    // Show explanation
+                    questionArea.querySelector('.explanation').classList.remove('hidden');
+                    
+                    // Update player score
+                    if (selectedAnswer === correctAnswer) {
+                        gameState.players[gameState.currentPlayer].score += 10;
+                        correctSound.play();
+                        
+                        // Add badge if not already earned
+                        const element = question.element;
+                        if (!gameState.players[gameState.currentPlayer].badges.includes(element)) {
+                            gameState.players[gameState.currentPlayer].badges.push(element);
+                        }
+                    } else {
+                        wrongSound.play();
+                    }
+                    
+                    // Change button text
+                    answerBtn.textContent = 'Tutup';
+                    answerBtn.removeEventListener('click', arguments.callee);
+                    answerBtn.addEventListener('click', () => {
+                        questionModal.classList.add('hidden');
+                        nextTurn();
+                    });
+                }
+            });
+            
+            questionModal.classList.remove('hidden');
+        }
+
+        // Next turn
+        function nextTurn() {
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.players.length;
+            updateLeaderboard();
+            updateCurrentPlayer();
+            rollDiceBtn.disabled = false;
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+            
+            leaderboard.innerHTML = sortedPlayers.map(player => 
+                `<li>${player.name}: ${player.score} poin</li>`
+            ).join('');
+            
+            // Update badges
+            const badges = document.getElementById('badges');
+            badges.innerHTML = gameState.players[gameState.currentPlayer].badges.map(element => 
+                `<div class="badge" title="${element}">${element.substring(0, 2)}</div>`
+            ).join('');
+        }
+
+        // Update current player display
+        function updateCurrentPlayer() {
+            const player = gameState.players[gameState.currentPlayer];
+            currentPlayerDisplay.textContent = `Giliran: ${player.name}`;
+            currentPlayerDisplay.style.color = `var(--${player.color})`;
+        }
+    </script>
+</body>
+</html>
